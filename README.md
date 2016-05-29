@@ -1,10 +1,7 @@
 
-# mybot
+# slack-infobot
 
-`mybot` is an working Slack bot written in Go. Fork it and use it to build
-your very own cool Slack bot!
+This is a configurable infobot for Slack based on rapidloop's mybot basic slack bot written in Go. 
 
-Check the [blog post](https://www.opsdash.com/blog/slack-bot-in-golang.html)
-for a description of mybot internals.
 
-Follow us on Twitter today! [@therapidloop](https://twitter.com/therapidloop)
+Follow me on Twitter! [@virtualsue](https://twitter.com/virtualsue)
