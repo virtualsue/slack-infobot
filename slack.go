@@ -91,6 +91,7 @@ type Message struct {
 	Id      uint64 `json:"id"`
 	Type    string `json:"type"`
 	Channel string `json:"channel"`
+	User    string `json:"user"`
 	Text    string `json:"text"`
 }
 
@@ -120,4 +121,43 @@ func slackConnect(token string) (*websocket.Conn, string) {
 	}
 
 	return ws, id
+}
+
+type responseUserInfo struct {
+	Ok    bool         `json:"ok"`
+	Error string       `json:"error"`
+	User  responseUser `json:"user"`
+}
+
+type responseUser struct {
+	Name string `json:"name"`
+}
+
+func getUserInfo(token, userid string) (name string, err error) {
+	url := fmt.Sprintf("https://slack.com/api/users.info?token=%s&user=%s", token, userid)
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("API request failed with code %d", resp.StatusCode)
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var respObj responseUserInfo
+	err = json.Unmarshal(body, &respObj)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if !respObj.Ok {
+		err = fmt.Errorf("Slack error: %s", respObj.Error)
+		return "", err
+	}
+	name = respObj.User.Name
+	return name, err
 }
