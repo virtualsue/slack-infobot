@@ -76,9 +76,7 @@ func main() {
 			switch args[1] {
 			case "stock":
 				if len(args) >= 3 {
-					go func(m Message) {
-						m.Text = getQuote(args[2])
-					}(m)
+					m.Text = getQuote(args[2])
 				} else {
 					m.Text = "You need to supply a stock ticker symbol (e.g. CSCO)."
 				}
@@ -122,13 +120,12 @@ func getQuote(sym string) string {
 	if len(rows) >= 1 && len(rows[0]) == 5 {
 		return fmt.Sprintf("%s (%s) is trading at $%s", rows[0][0], rows[0][1], rows[0][2])
 	}
-	return fmt.Sprintf("unknown response format (symbol was \"%s\")", sym)
+	return fmt.Sprintf("Unknown response format (symbol was \"%s\")", sym)
 }
 
 // Get the karma value for nick from the database.
 func getKarma(nick string, db *sql.DB) string {
 	var karma int
-	//err := db.QueryRow("SELECT SUM(delta) FROM karma WHERE nick = $1", nick).Scan(&karma)
 	rows, err := db.Query("SELECT SUM(delta) FROM karma WHERE nick = $1", nick)
 	defer rows.Close()
 	if err != nil {
