@@ -136,14 +136,6 @@ func getKarma(nick string, db *sql.DB) string {
 		rows.Scan(&karma)
 		karmaStr = fmt.Sprintf("Karma for %s is %d.", nick, karma)
 	}
-//	switch {
-//	case err == sql.ErrNoRows:
-//		karmaStr = fmt.Sprintf("%s has no karma.", nick)
-//	case err != nil:
-//		log.Fatal(err)
-//	default:
-//	   karmaStr = fmt.Sprintf("Karma for %s is %d.", nick, karma)
-//	}
 	return karmaStr
 }
 
@@ -180,10 +172,15 @@ func updateKarma(db *sql.DB, by, nick string, reason string, delta int) {
 	}
 }
 
-func getExcuse() string {
-	return "positron router malfunction"
-}
-
-func loadExcuses() {
-	return
+func getExcuse(db *sql.DB) string {
+	rows, err := db.Query("SELECT excuse FROM excuses ORDER BY random() LIMIT 1")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	excuse := "positron router malfunction"
+	if rows.Next() {
+		rows.Scan(&excuse)
+	}
+	return excuse
 }
