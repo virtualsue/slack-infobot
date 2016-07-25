@@ -96,7 +96,7 @@ func main() {
 					m.Text = "You have to tell me whom to summon!"
 				}
 			case "excuse":
-				m.Text = "Your excuse is " + getExcuse()
+				m.Text = "Your excuse is " + getExcuse(db)
 			default:
 				m.Text = "Huh?"
 			}
@@ -168,14 +168,13 @@ func updateKarma(db *sql.DB, by, nick string, reason string, delta int) {
 		nick, delta, by, reason)
 	if err != nil {
 		log.Printf("Failed to insert karma entry - %s", err)
-
 	}
 }
 
 func getExcuse(db *sql.DB) string {
 	rows, err := db.Query("SELECT excuse FROM excuses ORDER BY random() LIMIT 1")
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to get an excuse from the database:", err)
 	}
 	defer rows.Close()
 	excuse := "positron router malfunction"
