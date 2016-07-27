@@ -72,7 +72,7 @@ func main() {
 		// Look for bot commands (prefaced by bot id)
 		if m.Type == "message" && strings.HasPrefix(m.Text, "<@"+id+">") {
 			args := strings.Fields(m.Text)
-			// Pick out named commands
+			// Handle commands
 			switch args[1] {
 			case "stock":
 				if len(args) >= 3 {
@@ -86,6 +86,16 @@ func main() {
 					m.Text = getKarma(args[2], db)
 				} else {
 					m.Text = "No nick, no karma."
+				}
+			case "explain":
+				if args[2] == "karma" {
+					if args[3] != "" {
+						m.Text = getKarmaExp(args[3], db)
+					} else {
+						m.Text = "No nick, no explanation."
+					}
+				} else {
+					m.Text = "I can't explain " + args[2] + "."
 				}
 			case "summon":
 				if len(args[2]) > 0 {
@@ -169,6 +179,47 @@ func updateKarma(db *sql.DB, by, nick string, reason string, delta int) {
 	if err != nil {
 		log.Printf("Failed to insert karma entry - %s", err)
 	}
+}
+
+func getKarmaExp(nick string, db *sql.DB) string {
+	rows, err :=
+		db.Query("SELECT delta, by, reason FROM karma WHERE nick = $1 ORDER BY random() LIMIT 10", nick)
+	if err != nil {
+		log.Fatal("Failed to get karma data from the database:", err)
+	}
+	defer rows.Close()
+	var delta int
+	var by, reason string
+	var pos, neg string
+	for rows.Next() {
+		if err := rows.Scan(&delta, &by, &reason); err != nil {
+			log.Fatal(err)
+		}
+		if len(reason) == 0 {
+			// Don't include karma changes where no reason was given
+			continue
+		}
+		switch delta {
+		case 1:
+			pos += fmt.Sprintf("%s (%s),", reason, by)
+		case -1:
+			neg += fmt.Sprintf("%s (%s),", reason, by)
+		default:
+			continue
+		}
+	}
+	if rows.Err() != nil {
+		log.Fatal(err)
+	}
+	var explanation string
+	if len(pos) == 0 && len(neg) == 0 {
+		explanation = "No explanations found."
+	} else {
+		pos = strings.TrimSuffix(pos, ",")
+		neg = strings.TrimSuffix(neg, ",")
+		explanation = "Positive: " + pos + "; Negative: " + neg
+	}
+	return explanation
 }
 
 func getExcuse(db *sql.DB) string {
